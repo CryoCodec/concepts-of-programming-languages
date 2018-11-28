@@ -1,0 +1,10 @@
+plugins {
+    id("org.asciidoctor.convert") version "1.5.9.2"
+}
+
+description = "Comparison of golang and elixir in functional programming"
+
+asciidoctor {
+    logDocuments = true
+    sourceDir = file('src/docs')
+}
