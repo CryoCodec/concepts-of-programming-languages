@@ -1,10 +1,32 @@
+buildscript {
+    dependencies {
+        classpath 'org.asciidoctor:asciidoctorj-pdf:1.5.0-alpha.16'
+    }
+}
+
 plugins {
     id("org.asciidoctor.convert") version "1.5.9.2"
 }
 
 description = "Comparison of golang and elixir in functional programming"
 
+apply plugin: 'java'
+
+asciidoctorj {
+    version = '1.5.8.1'
+}
+
 asciidoctor {
-    logDocuments = true
+    backends 'pdf' 
     sourceDir = file('src/docs')
+    attributes \
+        'build-gradle': file('build.gradle'),
+        'source-highlighter': 'rouge',
+        'imagesdir': './images',
+        'toc': 'left',
+        'icons': 'font',
+        'setanchors': '',
+        'idprefix': '',
+        'idseparator': '-',
+        'docinfo1': ''
 }
