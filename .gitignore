@@ -20,4 +20,7 @@ gradle-app.setting
 ### Gradle Patch ###
 **/build/
 
+# ignore settings for Visual Studio Code
+.vs
+
 # End of https://www.gitignore.io/api/gradle
