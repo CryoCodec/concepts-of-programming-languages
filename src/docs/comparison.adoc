@@ -1,1 +1,46 @@
-*Hello* _World!_
+= Functional Programming: Go vs. Elixir
+
+During the last decades the functional programming paradigm became a lot more popular and respectable. Thus language designers tend to incorporate functional features into their programming languages. In this paper I try to shed some light on how Golang and Elixir approach functional programming. For the sake of completeness, the considered versions of the languages are golang 1.11.4 and elixir 1.7.4. +
+
+A myriad of buzzwords, mathematical ideas and seemingly necessary features revolve around functional programming. However the essence of these languages is way simpler.  Apparently almost all functional languages share a common ancestor, the lambda calculus. Introduced as computational model by the mathematician Alonzo Church in the 1930s, it does not dictate any of the modern languages' features as necessity. In fact its requirements could barely be simpler. The Lambda Calculus allows to define functions, apply them and then compute them (obivously the idea is a little more complex than that, but no deeper knowledge is needed for understanding this paper, thus the simplification). Let's have a look at how the languages handle these scenarios:
+
+.main.go
+[source, go]
+----
+
+func world() string { // <1>
+	return "World!"
+}
+
+func hello(x func() string) { <2>
+	fmt.Printf("Hello %v", x())
+}
+
+hello(world) // <3>
+
+----
+
+<1> Defines a function in Go
+<2> Defines a function that takes another function as parameter. The lambda calculus allows this implicitly and Go can do this too
+<3> Applies a function and computes the result
+
+.main.exs
+[source, elixir]
+----
+
+defmodule Greeter do
+  def hello(x), do: IO.puts "Hello " <> x.() //<1>
+  def world(), do: "World!" //<2>
+end
+
+IO.puts Greeter.hello(&Greeter.world/0) //<3>
+
+----
+
+<1> Defines a function in Elixir
+<2> Defines a function, which takes a function as parameter. 
+<3> Applies a function and computes the result. The *&* is used to pass a function defined in a module as a parameter whereas the */* denotes its arity. In this case the function *world* is of arity 0 as it does not take any parameters.
+
+Both languages provide a toolkit that allows the same things as the lambda calculus and as such can compute anything that is computable by it. So in theory we could end here and be happy about the results we found. However for a programming language to be practical for humans a lot more needs to be taken into consideration.
+
+
