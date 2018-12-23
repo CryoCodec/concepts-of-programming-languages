@@ -1,8 +1,22 @@
 = Functional Programming: Go vs. Elixir
+Author Lukas Buchner
+v1.0, 2018-23-12
 
-During the last decades the functional programming paradigm became a lot more popular and respectable. Thus language designers tend to incorporate functional features into their programming languages. In this paper I try to shed some light on how Golang and Elixir approach functional programming. For the sake of completeness, the considered versions of the languages are golang 1.11.4 and elixir 1.7.4. +
+== Introduction
+During the last decades the functional programming paradigm has become a lot more popular and respectable. 
+Thus language designers tend to incorporate functional features into their programming languages. 
+In this paper I try to shed some light on how the programming languages Golang and Elixir approach functional programming. 
+For the sake of completeness, the considered versions of the languages are golang 1.11.4 and elixir 1.7.4. +
 
-A myriad of buzzwords, mathematical ideas and seemingly necessary features revolve around functional programming. However the essence of these languages is way simpler.  Apparently almost all functional languages share a common ancestor, the lambda calculus. Introduced as computational model by the mathematician Alonzo Church in the 1930s, it does not dictate any of the modern languages' features as necessity. In fact its requirements could barely be simpler. The Lambda Calculus allows to define functions, apply them and then compute them (obivously the idea is a little more complex than that, but no deeper knowledge is needed for understanding this paper, thus the simplification). Let's have a look at how the languages handle these scenarios:
+TODO: Maybe Add definition of functional programming
+
+== Lambda Calculus
+A myriad of buzzwords, mathematical ideas and seemingly necessary features revolve around functional programming. 
+However the essence of these languages is way simpler. 
+Apparently almost all functional languages share a common ancestor, the lambda calculus. 
+Introduced as computational model by the mathematician Alonzo Church in the 1930s, it does not dictate any of the modern languages' features as necessity. 
+In fact its ruleset could barely be simpler. 
+The Lambda Calculus allows to define functions, apply them and then compute them (obivously the idea is a little more complex than that, but no deeper knowledge is needed for understanding this paper, thus the simplification). Let's have a look at how the languages handle these scenarios:
 
 .main.go
 [source, go]
@@ -29,8 +43,8 @@ hello(world) // <3>
 ----
 
 defmodule Greeter do
-  def hello(x), do: IO.puts "Hello " <> x.() //<1>
-  def world(), do: "World!" //<2>
+  def world(), do: "World!" //<1>
+  def hello(x), do: IO.puts "Hello " <> x.() //<2>
 end
 
 IO.puts Greeter.hello(&Greeter.world/0) //<3>
@@ -41,6 +55,93 @@ IO.puts Greeter.hello(&Greeter.world/0) //<3>
 <2> Defines a function, which takes a function as parameter. 
 <3> Applies a function and computes the result. The *&* is used to pass a function defined in a module as a parameter whereas the */* denotes its arity. In this case the function *world* is of arity 0 as it does not take any parameters.
 
-Both languages provide a toolkit that allows the same things as the lambda calculus and as such can compute anything that is computable by it. So in theory we could end here and be happy about the results we found. However for a programming language to be practical for humans a lot more needs to be taken into consideration.
+Both languages provide toolkits allowing the same things as the lambda calculus and as such can compute anything computable by it. 
+So in theory we could end here agreeing that both languages on a low level basis provide everything needed for functional programming. 
+However for a programming language to be practical for humans a lot more needs to be taken into consideration.
+
+== Type Systems
+
+Go is a compiled language with a static type system. Thus all types of a program are known at compile time. In case types are not compatible the compiler will gladly let you know:
+
+[source, go]
+----
+
+func isTrue(b bool) bool {
+	return b
+}
+
+isTrue(10) //<1>
+----
+
+<1> compiler says: cannot use 10 (type int) as type bool in argument to isTrue
+
+For primitive values Go does its job. How about writing a function, that always returns the passed parameter, known as the Id function. That should be easy, right?
+
+[source, go]
+----
+func id(x interface{}) interface{} { //<1>
+	return x
+}
+
+fmt.Print(  id(10).(int)  ) //<2>
+fmt.Print(  id(true).(int)  ) //<3>
+----
+<1> Go lacks support for parametric polymorphism. To be generic, one has to use the empty interface{}, which may contain anything.
+<2> Calls *id* with an integer. Returns the interface{} and has to be casted to an integer. 
+<3> Compiles without errors, but raises a panic at runtime as the cast cannot be performed. 
+
+Already it is a hassle working with the interface{}. 
+With this simple example the programmer has lost compile time safety as Go gives up once it encounters the use of interface{}. 
+One might argue, the *id* function is barely used other than for demonstration purposes. 
+So, how about a key concept of functional programming: functional composition. 
+Functional composition allows you to combine a number of functions to form a new one. 
+Hereby the result of one function is passed as the argument to the next one.
+
+[source, go]
+----
+//just for improved readability
+type any interface{}
+type function func(any) any
+
+func compose(g, f function) function {
+	return func(x any) any {
+		return g(f(x))
+	}
+}
+
+func pow2(x any) any { //needs this type declaration, otherwise it cannot be passed to compose
+	return x.(int) * x.(int)
+}
+
+func sqrt(x any) any { //needs this type declaration, otherwise it cannot be passed to compose
+	return math.Sqrt(float64(x.(int)))
+}
+
+same := compose(sqrt, pow2) //first copute pow2, then sqrt with result of pow2
+fmt.Print(same(12392))      //--> 12392
+----
+
+Here the problem becomes obvious. 
+For being polymorph the compose function takes two functions that take *interface{}* as parameter. 
+As a consequence every function that strives to be composable has to adhere to the type signature with *interface{}*. 
+This again leads to the loss of compile time safety a static type system provides. 
+In fact, used this way the type system has become more of a burden than of actual use. 
+
+TODO: Elixir
+
+== Purity
+
+== Immutability
+Immutability is a concept common amongst different programming paradigms. 
+
+== Functional Programmer's Toolbox
+
+== Standard Library
 
 
+
+== Performance
+
+== Conclusion
+
+== Sources & Further Readings
