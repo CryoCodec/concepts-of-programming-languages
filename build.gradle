@@ -16,17 +16,51 @@ asciidoctorj {
     version = '1.5.8.1'
 }
 
-asciidoctor {
-    backends 'pdf' 
-    sourceDir = file('src/docs')
-    attributes \
-        'build-gradle': file('build.gradle'),
-        'source-highlighter': 'rouge',
-        'imagesdir': './images',
-        'toc': 'left',
-        'icons': 'font',
-        'setanchors': '',
-        'idprefix': '',
-        'idseparator': '-',
-        'docinfo1': ''
+task copyHighlight(type: Copy){
+    from 'src/docs/highlight'
+    into 'build/asciidoc/html5/highlight'
 }
+
+task buildHtml5 {
+    doLast {
+        asciidoctor {
+            backends 'html5' 
+            sourceDir = file('src/docs')
+            attributes \
+                'build-gradle': file('build.gradle'),
+                'source-highlighter': 'highlightjs',
+                'imagesdir': './images',
+                'toc': 'left',
+                'icons': 'font',
+                'setanchors': '',
+                'idprefix': '',
+                'idseparator': '-',
+                'docinfo1': ''
+        }
+    }
+
+    finalizedBy asciidoctor
+    finalizedBy copyHighlight
+}
+
+task buildPdf {
+    doLast {
+        asciidoctor {
+            backends 'pdf'
+            sourceDir = file('src/docs')
+            attributes \
+            'build-gradle': file('build.gradle'),
+            'source-highlighter': 'rouge',
+            'imagesdir': './images',
+            'toc': 'left',
+            'icons': 'font',
+            'setanchors': '',
+            'idprefix': '',
+            'idseparator': '-',
+            'docinfo1': ''
+        }
+    }
+        
+    finalizedBy asciidoctor
+}
+
