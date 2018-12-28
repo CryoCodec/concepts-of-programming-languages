@@ -1,6 +1,9 @@
 = Functional Programming: Go vs. Elixir
-Author Lukas Buchner
+by Lukas Buchner
 v1.0, 2018-23-12
+:source-highlighter: rouge
+:highlightjsdir: highlight
+:stem:
 
 == Introduction
 During the last decades the functional programming paradigm has become a lot more popular and respectable. 
@@ -9,6 +12,8 @@ In this paper I try to shed some light on how the programming languages Golang a
 For the sake of completeness, the considered versions of the languages are golang 1.11.4 and elixir 1.7.4. +
 
 TODO: Maybe Add definition of functional programming
+TODO: Little introduction to Go
+TODO: Little Introduction to Elixir
 
 == Lambda Calculus
 A myriad of buzzwords, mathematical ideas and seemingly necessary features revolve around functional programming. 
@@ -118,16 +123,82 @@ func sqrt(x any) any { //needs this type declaration, otherwise it cannot be pas
 }
 
 same := compose(sqrt, pow2) //first copute pow2, then sqrt with result of pow2
-fmt.Print(same(12392))      //--> 12392
+same(12392)     //--> 12392
 ----
 
 Here the problem becomes obvious. 
 For being polymorph the compose function takes two functions that take *interface{}* as parameter. 
 As a consequence every function that strives to be composable has to adhere to the type signature with *interface{}*. 
-This again leads to the loss of compile time safety a static type system provides. 
-In fact, used this way the type system has become more of a burden than of actual use. 
+This leads to the loss of compile time safety a static type system provides. 
+Furthermore readibility suffers as the empty interface{} by itself does not allow any reasoning about used types, which is fundamentally different to parametric polymorphism.
+In fact, when writing Go this way the type system has become more of a burden than of actual use. +
 
-TODO: Elixir
+Elixir is using different concepts than Go. 
+It is a dynamically typed language, which means all types of a program are inferred by the runtime. 
+Although it is dynamically typed, Elixir supports strict type checks for operators. 
+
+.main.exs
+[source, elixir]
+----
+hype = "Elixir is awesome"
+awesomeness = 42
+hype + awesomeness # This is an error
+----
+
+In this example two variables were defined, one of type string and other of type int. 
+The *+* operator requires both sides to be of type int. 
+This compiles with a warning, but will result in the following error at runtime: 
+
+----
+warning: this expression will fail with ArithmeticError
+  main.exs:3
+
+** (ArithmeticError) bad argument in arithmetic expression
+    main.exs:3: (file)
+    (elixir) lib/code.ex:767: Code.require_file/2
+----
+
+So far so good. Let's head to our Id function. 
+
+[source, elixir]
+----
+id = fn a -> a end
+id.("some") #--> "some"
+----
+
+Writing this function is a breeze in Elixir compared to Go. 
+It supports all types and works without casting. 
+Next define the compose function: 
+
+[source, elixir]
+----
+compose = fn(g, f) -> 
+            fn(arg) -> g.(f.(arg)) end 
+          end
+pow2 = fn(x) -> x * x end
+sqrt = fn(x) -> :math.sqrt(x) end #uses the erlang math library
+
+same = compose.(sqrt, pow2)
+same.(10) #--> 10.0
+----
+
+This just looks like an improved version of the Go code. 
+Without the types and braces the Elixir code gives a less cluttered look to the eye. 
+Another big bonus is the absence of casting, which again improves readability and allows for better function reuse. 
+Last, the signature of the composed functions stays natural, whereas the Go version forced functions to be defined with *interface{}*. 
+It is fair to say, that elixir allows the more elegant functional code due to more concise syntax and the absence of types. 
+However, as a consequence there is no compile time safety and hence nothing preventing you from composing non sense. 
+Same holds true for Erlang and the underlying Beam VM. 
+This design decision led to criticism and requests for a strict type system. 
+Apparently there was an attempt to integrate this request without breaking the erlang ecosystem, which failed for several reasons.  
+As a result the request was solved in a different way.
+Erlang now provides a tool called "Dialyzer", which performs static type analysis. 
+Elixir uses the same tool to solve the exact same problem. 
+A programmer can optionally provide type specifications for functions. 
+Dialyzer will then analyse whether the functions is called with wrong arguments in the code. 
+With this technique Elixir tries to combine the best of the dynamically and strictly typed worlds. 
+You get the feel of a dynamically typed language plus most of the security a strict type system provides. 
+
 
 == Purity
 
@@ -138,9 +209,97 @@ Immutability is a concept common amongst different programming paradigms.
 
 == Standard Library
 
-
-
 == Performance
+
+Obviously different implementations of programming languages behave differently regarding performance. 
+The same often holds true when implementing a feature in different paradigms within one language. 
+Functional programming usually avoids mutation of state and thus encourages the use of recursion. 
+However this can result in a serious performance difference compared to imperative programming, depending on how the compiler/runtime optimizes the code. 
+Thus this chapter will not compare Elixir and Go with each other but rather how the use of recursion vs imperative features affects a programs runtime. 
+
+Elixir does not allow to mutate state and as such can not support any iterative control flow structures such as the *for* or *while* loops. 
+Thus a programmer has to rely on recursion to get the job done. 
+This means, a function is called recursively until a condition is reached, that stops the continuation.
+A classic example is a function, that computes the nth-fibonacci number. 
+Where a Fibonacci Number is defined as:  
+
+stem:[f_n = f_(n-1) + f_(n-2) forall n>2]
+
+with the starting values:
+stem:[f_0 = 0]
+stem:[f_1 = 1]
+
+With the use of pattern matching a corresponding function in Elixir could look like the following:
+
+[source, elixir]
+----
+def fibonacci(n) when n < 0, do: raise "Bad Boy! Fibonacci is defined only for n >= 0"
+def fibonacci(0), do: 0
+def fibonacci(1), do: 1
+def fibonacci(n), do: fibonacci(n-1) + fibonacci(n-2)
+----
+
+The given implementation uses recursion for computing the fibonacci number, whereas computing one fibonacci number will always yield two function calls.
+Since a fibonacci number depends on its two predecessors, a cascade of function calls is necessary for computing a fibonacci number with a bigger n. 
+Running this function naively without any optimizations applied is surely not optimal. 
+The reason behind this observation lies in the cascade of function calls. 
+Each function call results in a new stack frame, which is alot of overhead for actually just passing around the called function's return value. 
+A common applied optimization for functional languages is the so called tail call optimization. 
+This optimization can be applied when the last executed statement of a function is a function call. 
+A recursive function that fits the mentioned requirements is called tail recursive. 
+When the optimization is applied, the creation of new stack frames is avoided and the computation can run with constant stack space. 
+Ultimately this results in a huge performance benefit. 
+Elixir does provide this type of optimization, so how about using it?
+When looking at our naive fibonacci implementation, the last executed statement is actually an addition. 
+So we need to change the algorithm how the fibonacci number is computed to be a tail recursive one.  
+
+[source, elixir]
+----
+def fibonacci(n) when n < 0, do: raise "Bad Boy! Fibonacci is defined only for n >= 0"
+def fibonacci(n), do: pfib(n, 1, 0)  #allows for a simple interface with arity 1, but dispatches the tailrecursion to a private implementation
+defp pfib(0, _, result), do: result  #defp defines a private (not visible for the outside world) function
+defp pfib(n, next, result), do: pfib(n-1, next+result, next) #Hooray! This is tail recursive!
+----
+
+When measuring execution times a huge difference between the two versions can be observed. 
+I will just measure very roughly, as my goal is not show absolute numbers, but the relative difference. 
+The used method does not respect the times our program spent in kernel or user mode. 
+But i suppose, when executing it a number of times it still has its relevance (in the end you might just want to test it yourself!). 
+I used the following: 
+
+[source, elixir]
+----
+def timeIt(n) do
+    start = :os.system_time(:seconds)
+    fibonacciNumber = fibonacci(n)
+    finish = :os.system_time(:seconds)
+    timeTaken = finish - start
+    IO.puts "#{n}-th Fibonacci number is: #{fibonacciNumber}. Computation finished in #{timeTaken} seconds!"
+  end
+----
+
+The version with the naive implementation resulted in: 
+----
+45-th Fibonacci number is: 1134903170. Computation finished in 20 seconds!
+----
+
+The optimized version:
+----
+45-th Fibonacci number is: 1134903170. Computation finished in 0 seconds!
+#No this is not a mistake - it was just that much faster!
+----
+
+As we can see, the difference is enormous. 
+Apparently, it is so significant, the optimized version could easily compute the 300000th fibonacci number on my machine within a second! 
+To sum up, even though elixir as a functional language relies on recursion only, it can be incredibly fast and efficient, when used correctly! 
+
+Let us now have a look at how Golang handles things. 
+Go, unlike Elixir, supports both iterative structures and recursion. 
+Though, as of now Golang does not support tail call optimization. 
+Simply put, for computationally intensive tasks recursion should be avoided. 
+Thus an efficient function that computes fibonacci numbers in Go must be iterative. 
+The performance difference between the recursive and iterative approach is comparable to the optimized and unoptimized versions used with elixir. 
+Based on this observation it can be concluded, that it is not reasonable to use the purely recursive approach, often seen in functional programming, in Go. 
 
 == Conclusion
 
