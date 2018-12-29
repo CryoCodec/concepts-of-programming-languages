@@ -203,7 +203,103 @@ You get the feel of a dynamically typed language plus most of the security a str
 == Purity
 
 == Immutability
-Immutability is a concept common amongst different programming paradigms. 
+Immutability is a well known principle in programming in general, but especially popular in functional programming languages. 
+An object is called immutable if it guarantees there is no possibility to modify its values. 
+Hence a reference to that object guarantees to always point to the same value. 
+Immutability offers some welcome adavantages, such as thread safety and improved reasoning about written code. 
+Before we dive into Elixir and Go a few terms need to be defined.
+
+A *Reassignment* occurs if a variable's reference can be rebound to point to a different object. 
+This is not a mutation, as the previously pointed to object is left unchanged. 
+Few languages are driven by strict non-assignability, which prohibits the reassignment of variables. 
+Instead most languages allow references to change. 
+More important is whether the immutability guarantees for an object are *deep* or *shallow*. 
+For *deep* immutability all object's fields must non reassignable and transitively-referred to objects have to be immutable as well. 
+In contrast, *shallow* immutability forbids the reassignment of an object's fields but allows for transitively referred to objects to be mutated. 
+From a clients perspective the deep immutablity guarantees are preferable. 
+
+In Elixir all data guarantees deep immutability. 
+In general this means whenever a structure shall be modified, a new object with the modified values is the result. 
+Note that elixir internally handles this case differently depending on the type of updated object. 
+For more details please head to the Elixir documentation. 
+For the reassignment part: Elixir allows to bind a label to a value. 
+I used label on purpose, as the usually used term variable tends to confuse. 
+Attaching a label in Exilir actually means that the left hand side is interchangable with the right hand side of the statement. 
+For mutable objects in other languages this is not true, thus the differentiation between variables and labels. 
+Unlike Erlang those labels can be shadowed and even be rebinded, as shown below:   
+
+[source, elixir]
+----
+a = "now"
+x = a
+a = "later" #rebinding a
+# a is "later", x is "now"
+
+shadow = fn b -> 
+              a = "see you " #Here the outer a gets shadowed by the inner a. Outer a is inaccessible
+              a <> b
+          end 
+shadow.(a) # --> "see you later"
+# a is still "later"
+----
+
+Go by itself does barely make any guarantees at all. 
+However it provides language features that enable immutability to some extent. 
+Some Basic types of Go are immutable, such as numbers, booleans and strings (and a bunch more), but the standard container types such as maps or arrays/slices are mutable. 
+Let us have a look at the easiest language feature for immutability: const. 
+
+[source, go]
+----
+const Pi = 3.14  //This can never change
+----
+
+Meant for defining constants, *const* is a keyword of the Go language. 
+This can only be used in conjunction with the types character, string, boolean, or numeric values. 
+Obviously this is not sufficient, hence have a look at other options. 
+Go features pointers, which gives the programmer control about how values are passed to functions. 
+With this at hand, it is possible to build functions where parameters are passed call by value.
+Hereby the function receives an actual copy of the object. 
+This effectively makes it impossible for the function to mutate the state of the object referenced from the outer scope. 
+In contrast using a pointer, and therefore call by reference, the function can mutate the state of the object having an effect in the outer scope. 
+Using this technique allows to design immutable data types, as the following example illustrates: 
+
+[source, go]
+----
+package rational 
+
+//represents a rational number with numberator/denominator
+type Rational struct {
+	numerator   int  //starts with a lowercase letter, thus cannot be accessed from outside this package
+	denominator int
+}
+
+func NewRational(numerator int, denominator int) Rational {
+	//creates a new Rational number 
+}
+
+//Call by value, cannot mutate object
+func (x Rational) Multiply(y Rational) Rational {
+	return NewRational(x.numerator*y.numerator, x.denominator*y.denominator) //Returns a NEW Rational object
+}  
+
+func (x Rational) GetNumerator() int {
+  return x.numerator
+}
+----
+
+The above pattern shows how to implement immutable data structures in Go. 
+All of its methods are read only and never mutating. 
+This be can ensured by using call by value and in case of modification always creating new objects. 
+Unfortunately this pattern cannot guarantee immutability entirely, as the struct fields may be used from within the same package. 
+So, the package developer has to make sure not to mutate the object as Go does not allow any further restrictions. 
+The last option Go offers is to create manual copies of the objects. 
+Unfortunately this obfuscates the code for the sake of immutability and adds runtime overhead. 
+To sum up, Go was not designed with immutability as paramount and exactly feels that way. 
+It does not help the developer to make any assumptions nor guarantees. 
+Based on that, almost no library was written with immutability as a major concern. 
+However, it follows, a libary's client can only be pessimistic and assume mutability. 
+So even if your part of the program is strictly immutable, when calling into a library you lose that safety. 
+
 
 == Functional Programmer's Toolbox
 
@@ -262,7 +358,7 @@ defp pfib(n, next, result), do: pfib(n-1, next+result, next) #Hooray! This is ta
 ----
 
 When measuring execution times a huge difference between the two versions can be observed. 
-I will just measure very roughly, as my goal is not show absolute numbers, but the relative difference. 
+I will just measure very roughly, as my goal is not to show absolute numbers, but the relative difference. 
 The used method does not respect the times our program spent in kernel or user mode. 
 But i suppose, when executing it a number of times it still has its relevance (in the end you might just want to test it yourself!). 
 I used the following: 
@@ -291,7 +387,7 @@ The optimized version:
 
 As we can see, the difference is enormous. 
 Apparently, it is so significant, the optimized version could easily compute the 300000th fibonacci number on my machine within a second! 
-To sum up, even though elixir as a functional language relies on recursion only, it can be incredibly fast and efficient, when used correctly! 
+To sum up, even though elixir as a functional language relies on recursion only, it can be incredibly fast and efficient, when used correctly. 
 
 Let us now have a look at how Golang handles things. 
 Go, unlike Elixir, supports both iterative structures and recursion. 
@@ -304,3 +400,5 @@ Based on this observation it can be concluded, that it is not reasonable to use 
 == Conclusion
 
 == Sources & Further Readings
+
+Immutability: https://homes.cs.washington.edu/~mernst/pubs/immutability-aliasing-2013-lncs7850.pdf
