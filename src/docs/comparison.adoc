@@ -199,9 +199,6 @@ Dialyzer will then analyse whether the functions is called with wrong arguments 
 With this technique Elixir tries to combine the best of the dynamically and strictly typed worlds. 
 You get the feel of a dynamically typed language plus most of the security a strict type system provides. 
 
-
-== Purity
-
 == Immutability
 Immutability is a well known principle in programming in general, but especially popular in functional programming languages. 
 An object is called immutable if it guarantees there is no possibility to modify its values. 
@@ -214,16 +211,16 @@ This is not a mutation, as the previously pointed to object is left unchanged.
 Few languages are driven by strict non-assignability, which prohibits the reassignment of variables. 
 Instead most languages allow references to change. 
 More important is whether the immutability guarantees for an object are *deep* or *shallow*. 
-For *deep* immutability all object's fields must non reassignable and transitively-referred to objects have to be immutable as well. 
+For *deep* immutability all object's fields must be non reassignable and transitively-referred to objects have to be immutable as well. 
 In contrast, *shallow* immutability forbids the reassignment of an object's fields but allows for transitively referred to objects to be mutated. 
 From a clients perspective the deep immutablity guarantees are preferable. 
 
 In Elixir all data guarantees deep immutability. 
 In general this means whenever a structure shall be modified, a new object with the modified values is the result. 
-Note that elixir internally handles this case differently depending on the type of updated object. 
+Note that Elixir internally handles this case differently depending on the type of updated object. 
 For more details please head to the Elixir documentation. 
 For the reassignment part: Elixir allows to bind a label to a value. 
-I used label on purpose, as the usually used term variable tends to confuse. 
+The word label is used on purpose, as the standard term variable tends to confuse here. 
 Attaching a label in Exilir actually means that the left hand side is interchangable with the right hand side of the statement. 
 For mutable objects in other languages this is not true, thus the differentiation between variables and labels. 
 Unlike Erlang those labels can be shadowed and even be rebinded, as shown below:   
@@ -300,10 +297,143 @@ Based on that, almost no library was written with immutability as a major concer
 However, it follows, a libary's client can only be pessimistic and assume mutability. 
 So even if your part of the program is strictly immutable, when calling into a library you lose that safety. 
 
+== Purity
+
+Purity is a concept that applies to functions. 
+A function is called pure if the two rules apply: 
+1. The function depends on its arguments only and is idempotent. This also excludes mutable references and things such as I/O streams. 
+2. The function has no side effects, which means the evaluation does not involve any mutation. Note, this also applies to effects appearing to the outer world like I/O.  
+
+If both rules apply, the function is a computational analogue of a mathematical function. 
+A few programming languages have been designed around the principle of purity, such as haskell. 
+In pure languages the entire program fulfills the principles of purity. 
+As I/O is inherently impure, a pure programming idiom, the I/O Monad, was found for pure functional programming. 
+However neither Go nor Elixir are designed to be pure languages. 
+For Golang this can be determined easily when remembering the Immutability chapter. 
+Go does not offer any Immutablity guarantees and leaves this decision to the programmer. 
+Apparantly this already violates purity because rule #2 no longer holds true. 
+It is impossible to be pure without guaranteeing immutability. 
+Theoretically it is still possible to write a pure program, but for sufficient complex programs it is barely provable. 
+Elixir is different, as it guarantees immutability.  
+Nevertheless it is impure, which can be observed easiliy when looking at how I/O is performed. 
+Since it is implemented without the monad performing I/O operations is impure.   
+To sum up, of course, it is possible to write pure functions in both languages, but there is no guarantee other programmers do so as well. 
+Once one depends on an impure function, the whole concept of purity is violated. 
+Yet it is unclear if striving for purity in an impure world is reasonable. 
+I suppose it is not, as big advantages of purity such as referential transparency and easier parallelism are lost once an impure function is called. 
+Additionally both languages' compilers do not make use of the advantages purity can offer. 
+As a consequence, pure functions are only profitable for the programmer as one can easier reason about them. 
+Therefore I suggest writing pure functions wherever it is reasonable without obfuscating code, else sticking to the impure constructs the language was designed for. 
 
 == Functional Programmer's Toolbox
 
-== Standard Library
+Through the years a set standard set of features for functional programming has been established. 
+Though a multiparadigm language,  Go chose not to support any of those. 
+Elixir in contrast has them all baked in. 
+So let us see, what in my opinion is a Toolbox making life in functional programming much easier. 
+
+Pattern matching allows to define a function to behave differently depending on matched pattern. 
+This helps to make code very concise. 
+Take this function implementation, returning the length of a linked list in Elixir:
+
+[source, elixir]
+----
+
+defmodule Length do
+  def of([]), do: 0 //<1>
+  def of([_ | tail]), do: 1 + of(tail) //<2>
+end
+----
+<1> Matches the empty list. Returns 0
+<2> Matches a list with more than 0 elements, destructuring the list into a head and tail. The head is first item of the list, which is not bound to a label in the example. The tail contains the rest of the list, which passed as an argument to the recursive call. 
+
+The use of pattern matching helped avoiding a bunch of if-else statements making the code easily understandable and readable without clutter. 
+The example already makes use of a advanced feature of pattern matching in Elixir. 
+Elixir allows to match against all of its internal types plus user defined types. 
+Additionally it is possible to destructure the data, as in the example when we splitted the list in its head and tail. 
+Pattern matching is not only available in function signatures but also in other expressions. 
+For instances inside the case statement:
+[source, elixir]
+----
+case {1, 2, 3} do
+   {4, 5, 6} ->
+     "This clause won't match"
+  {1, x, 3} ->
+    "This clause will match and bind x to 2 in this clause"
+  _ ->
+    "This clause would match any value"
+end
+----
+
+In addition to pattern matching Elixir features Guards, which are a way to add more complex constraints on patterns. 
+Guards help to express an extended range of cases, where pattern matching on its own is not sufficient. 
+Guards start with the *when* keyword and are followed by a boolean expression. 
+
+[source, elixir]
+----
+def empty_map?(map) when map_size(map) == 0, do: true
+def empty_map?(map) when is_map(map), do: false
+----
+
+Looking at the function empty_map? one might ask why guards are necessary since one can pattern match on maps, right? 
+In fact matching on maps is possible, but it is not possible to match an empty map. 
+Hence guards are necessary here. 
+Furthermore the guard *is_map(map)* demonstrates the fact, that a guard can restrict the matched types. 
+
+The last feature I want to highlight is the pipe operator. 
+The pipe is positioned in between two expressions, whereas it takes the result of the left expression and passes it to the right. 
+This allows to write more readable code, especially for people reading from left to right. 
+
+[source, elixir]
+----
+String.split(String.upcase("No pipe sucks")) #-->["NO", "PIPE", "SUCKS"]
+
+"Pipe rocks" |> String.upcase() |> String.split()  #-->["PIPE", "ROCKS"]
+----
+
+The pipe operator highlights the flow of information, which is from left to right. 
+In contrast, the standard approach flows from the innermost function to the outermost. 
+
+To summarize, Elixir provides neat features helping the functional programmer to be more efficient and write better code. 
+Note that Elixir did not invent any of those features and therefore they can be found in some other languages as well. 
+Nonetheless they are useful.   
+
+== Standard Library & Collections
+
+When considering a language for development the standard library and the language's ecosystem is a key aspect. 
+In this chapter we will inspect from a functional perspective how many utilities the standard library of both languages provides. 
+Starting with Go, it has to be said, that the standard library is far from being as complete as Java's. 
+It is kept very minimalistic offering barely more than a solid foundation to build upon. 
+Due to the lack of parametric polymorphism the standard library does not provide a broad range of container types. 
+As a consequence Go does not provide the utilities for collection types a functional programmer is used to. 
+The standard way of handling the absence, is to write the needed helper functions yourself. 
+Unfortunately this has to be done for every type the operations should be applied on (assuming we want to avoid interface{} and casting for reasons discussed in chapter Type Systems).
+This is pretty repetitive, leading to much boilerplate and code blocks where only types differ. 
+As a consequence this kind of programming style, though very functional, is far from optimal in Go. 
+Or as one of the language designers Rob Pike said about a map/reduce/filter package he wrote: 
+
+----
+I wanted to see how hard it was to implement this sort of thing in Go, with as nice an API as I could manage. It wasn't hard.
+Having written it a couple of years ago, I haven't had occasion to use it once. Instead, I just use "for" loops.
+
+You shouldn't use it either.
+----
+
+Elixir is different in this regards. 
+A sufficient amount of generic Data types is baked into the language. 
+Designed with functional programming in mind, the Enum module provides a programmer with higher order functions working on enumerable collection types.
+The following demonstrates basic usage of the Enum module: 
+
+[source, elixir]
+----
+range = [1, 2, 3, 4]
+range |> Enum.map(fn x -> x * 2 end) #--> [2, 4, 6, 8]
+      |> Enum.reduce(fn x, acc -> x + acc end) #--> 20
+----
+
+To summarize, Elixir fulfills the expectations a functional programmer has, with a standard library offering alot by default. 
+Go was not build to hold up with those expectations, and does not provide more than a bare minimum. 
+For a functional programmer the most standard tools are missing, which makes Go an unattractive language from this perspective. 
 
 == Performance
 
