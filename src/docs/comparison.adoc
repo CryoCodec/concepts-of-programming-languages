@@ -8,13 +8,13 @@ v1.0, 2018-23-12
 == Introduction
 During the last decades the functional programming paradigm has become a lot more popular and respectable. 
 Thus language designers tend to incorporate functional features into their programming languages. 
-In this paper I try to shed some light on how the programming languages Golang and Elixir approach functional programming. 
+In this paper, I try to shed some light on how the programming languages Golang and Elixir approach functional programming. 
 The considered versions of the languages are Golang 1.11.4 and Elixir 1.7.4. +
 
 Go, often referred to as Golang, calls itself a multiparadigm language. 
 It is a young language, originating in the last decade. 
 Go focuses on simplicity and building reliable and efficient software. 
-With a nice abstraction it gives easy access to concurrency and thus utilizing modern processors.
+With a nice abstraction, it gives easy access to concurrency and thus utilizing modern processors.
 Optically it has an undenieable touch of C. 
 
 Elixir is a young language as well, appearing the first time in 2011. 
@@ -25,7 +25,7 @@ By design it is interoperable with Erlang, allowing Elixir to leverage the Erlan
 Now what is functional programming, anyway? 
 ----
 It is a programming paradigm, where computation is based on the combination of pure functions. 
-Using this paradigm avoids shared state, mutable data and side effects. 
+Using this paradigm avoids shared state, mutable data, and side effects. 
 In contrast to the imperative paradigm, functional programming follows a declarative approach. 
 ----
 
@@ -35,10 +35,10 @@ Calling a language functional usually just means it incorporates some of the fun
 
 == Lambda Calculus
 A myriad of buzzwords and complicated mathematical ideas revolve around functional programming. 
-However the essence of these languages is way simpler. 
-Apparently almost all functional languages share a common ancestor, the lambda calculus. 
-Introduced as a computational model by the mathematician Alonzo Church in the 1930s, it does not dictate any of the modern languages' features as necessity. 
-In fact its ruleset could barely be simpler. 
+However, the essence of these languages is way simpler. 
+Apparently, almost all functional languages share a common ancestor, the lambda calculus. 
+Introduced as a computational model by the mathematician Alonzo Church in the 1930s, it does not dictate any of the modern languages' features a necessity. 
+In fact, its ruleset could barely be simpler. 
 The Lambda Calculus allows to define functions, apply them and then compute them (obivously the idea is a little more complex than that, but no deeper knowledge is needed for understanding this paper, thus the simplification). Let us have a look at how the languages handle these scenarios:
 
 .main.go
@@ -79,8 +79,8 @@ IO.puts Greeter.hello(&Greeter.world/0) //<3>
 <3> Applies a function and computes the result. The *&* is used to pass a function defined in a module as a parameter whereas the */* denotes its arity. In this case the function *world* is of arity 0 as it does not take any parameters.
 
 Both languages provide toolkits allowing the same things as the lambda calculus, which makes them equally powerful. 
-Apparently the Lambda Calculus is equivalent in computational power to the turing machine.  
-So in theory we could end here agreeing that both languages on a low level basis provide everything needed for functional programming. 
+Apparently, the Lambda Calculus is equivalent in computational power to the Turing machine.  
+So, in theory, we could end here agreeing that both languages on a low-level basis provide everything needed for functional programming. 
 However for a programming language to be practical for humans a lot more needs to be taken into consideration.
 
 == Type Systems
@@ -115,7 +115,7 @@ fmt.Print(  id(true).(int)  ) //<3>
 <3> Compiles without errors, but raises a panic at runtime as the cast cannot be performed. 
 
 Already it is a hassle working with the interface{}. 
-With this simple example the programmer has lost compile time safety as Go gives up once it encounters the use of interface{}. 
+With this simple example, the programmer has lost compile time safety as Go gives up once it encounters the use of interface{}. 
 One might argue, the *id* function is barely used other than for demonstration purposes. 
 So, how about a key concept of functional programming: functional composition. 
 Functional composition allows you to combine a number of functions to form a new one. 
@@ -133,11 +133,11 @@ func compose(g, f function) function {
 	}
 }
 
-func pow2(x any) any { //needs this type declaration, otherwise it cannot be passed to compose
+func pow2(x any) any { //needs this type declaration, otherwise, it cannot be passed to compose
 	return x.(int) * x.(int)
 }
 
-func sqrt(x any) any { //needs this type declaration, otherwise it cannot be passed to compose
+func sqrt(x any) any { //needs this type declaration, otherwise, it cannot be passed to compose
 	return math.Sqrt(float64(x.(int)))
 }
 
@@ -147,9 +147,9 @@ same(12392)     //--> 12392
 
 Here the problem becomes obvious. 
 For being polymorph the compose function takes two functions that take *interface{}* as parameter. 
-As a consequence every function that strives to be composable has to adhere to the type signature with *interface{}*. 
-This leads to the loss of compile time safety a static type system provides. 
-Furthermore readibility suffers as the empty interface{} by itself does not allow any reasoning about used types, which is fundamentally different to parametric polymorphism.
+As a consequence, every function that strives to be composable has to adhere to the type signature with *interface{}*. 
+This leads to the loss of compile-time safety a static type system provides. 
+Furthermore, readability suffers as the empty interface{} by itself does not allow any reasoning about used types, which is fundamentally different to parametric polymorphism.
 In fact, when writing Go this way the type system has become more of a burden than of actual use. +
 
 Elixir uses different concepts than Go. 
@@ -202,45 +202,45 @@ same.(10) #--> 10.0
 ----
 
 This just looks like an improved version of the Go code. 
-Without the types and braces the Elixir code gives a less cluttered look to the eye. 
+Without the types and braces, the Elixir code gives a less cluttered look to the eye. 
 Another big bonus is the absence of casting, which again improves readability and allows for better function reuse. 
 Last, the signature of the composed functions stays natural, whereas the Go version forced functions to be defined with *interface{}*. 
 It is fair to say, that elixir allows the more elegant functional code due to more concise syntax and the absence of types. 
-However, as a consequence there is no compile time safety and hence nothing preventing you from composing non sense. 
+However, as a consequence, there is no compile-time safety and hence nothing preventing you from composing nonsense. 
 Same holds true for Erlang and the underlying Beam VM. 
 This design decision led to criticism and requests for a strict type system. 
-Apparently there was an attempt to integrate this request without breaking the erlang ecosystem, which failed for several reasons.  
-As a result the request was solved in a different way.
+Apparently, there was an attempt to integrate this request without breaking the Erlang ecosystem, which failed for several reasons.  
+As a result, the request was solved in a different way.
 Erlang now provides a tool called "Dialyzer", which performs static type analysis. 
 Elixir uses the same tool to solve the exact same problem. 
 A programmer can optionally provide type specifications for functions. 
-Dialyzer will then analyse whether functions are called with wrong arguments in the code. 
-With this technique Elixir tries to combine the best of the dynamically and strictly typed worlds. 
+Dialyzer will then analyze whether functions are called with wrong arguments in the code. 
+With this technique, Elixir tries to combine the best of the dynamically and strictly typed worlds. 
 You get the feel of a dynamically typed language plus most of the security a strict type system provides. 
 
 == Immutability
 Immutability is a well known principle in programming in general, but especially popular in functional programming languages. 
 An object is called immutable if it guarantees there is no possibility to modify its values. 
 Hence a reference to that object guarantees to always point to the same value. 
-Immutability offers some welcome adavantages, such as thread safety and improved reasoning about written code. 
+Immutability offers some welcome advantages, such as thread safety and improved reasoning about written code. 
 Before we dive into Elixir and Go a few terms need to be defined.
 
 A *reassignment* occurs if a variable's reference can be rebound to point to a different object. 
 This is not a mutation, as the previously pointed to object is left unchanged. 
 Few languages are driven by strict non-assignability, which prohibits the reassignment of variables. 
-Instead most languages allow references to change. 
+Instead, most languages allow references to change. 
 More important is whether the immutability guarantees for an object are *deep* or *shallow*. 
-For *deep* immutability all object's fields must be non reassignable and transitively-referred to objects have to be immutable as well. 
+For *deep* immutability all object's fields must be non-reassignable and transitively-referred to objects have to be immutable as well. 
 In contrast, *shallow* immutability forbids the reassignment of an object's fields but allows for transitively referred to objects to be mutated. 
 From a clients perspective the deep immutablity guarantees are preferable. 
 
 In Elixir all data guarantees deep immutability. 
-In general this means whenever a structure shall be modified, a new object with the modified values is the result. 
+In general, this means whenever a structure shall be modified, a new object with the modified values is the result. 
 Note that Elixir internally handles this case differently depending on the type of updated object. 
 For more details please head to the Elixir documentation. 
 For the reassignment part: Elixir allows to bind a label to a value. 
 The word label is used on purpose, as the standard term variable tends to confuse here. 
-Attaching a label in Elixir actually means the left hand side is interchangeable with the right hand side of the expression. 
+Attaching a label in Elixir actually means the left-hand side is interchangeable with the right-hand side of the expression. 
 For mutable objects in other languages this is not true, thus the differentiation between variables and labels. 
 Unlike Erlang those labels can be shadowed and even be rebinded, as shown below:   
 
@@ -260,8 +260,8 @@ shadow.(a) # --> "see you later"
 ----
 
 Go by itself does barely make any guarantees at all. 
-However it provides language features that enable immutability to some extent. 
-Some basic types of Go are immutable, such as numbers, booleans and strings (and a bunch more).
+However, it provides language features that enable immutability to some extent. 
+Some basic types of Go are immutable, such as numbers, booleans, and strings (and a bunch more).
 The standard container types such as maps or arrays/slices are mutable. 
 Let us have a look at the easiest language feature for immutability: const. 
 
@@ -271,21 +271,21 @@ const Pi = 3.14  //This can never change
 ----
 
 Meant for defining constants, *const* is a keyword of the Go language. 
-This can only be used in conjunction with the types character, string, boolean, or numeric values. 
+This can only be used in conjunction with the types of character, string, boolean, or numeric values. 
 Obviously this restriction makes *const* a bad choice for guaranteeing immutability. 
 Let us explore the next option: pointers. 
 Go features pointers, which give the programmer control about the way values are passed to functions. 
-With this at hand, it is possible to build functions which take parameters call by value.
+With this at hand, it is possible to build functions which take parameters call-by-value.
 Hereby the function receives an actual copy of the object. 
 This effectively makes it impossible for the function to mutate the state of the object referenced from the outer scope. 
-In contrast using a pointer, and therefore call by reference, the function can mutate the state of the object having an effect in the outer scope. 
+In contrast, using a pointer, and therefore call by reference, the function can mutate the state of the object having an effect in the outer scope. 
 Using this technique allows to design immutable data types, as the following example illustrates: 
 
 [source, go]
 ----
 package rational 
 
-//represents a rational number with numberator/denominator
+//represents a rational number with numerator/denominator
 type Rational struct {
 	numerator   int  //starts with a lowercase letter, thus cannot be accessed from outside this package
 	denominator int
@@ -306,13 +306,13 @@ func (x Rational) GetNumerator() int {
 ----
 
 The above pattern shows how to implement immutable data structures in Go. 
-All of its methods are read only and never mutating. 
-This be can ensured by using call by value for function parameters.
+All of its methods are read-only and never mutating. 
+This can be ensured by using call-by-value for function parameters.
 In case of modification new objects get created. 
-Unfortunately this pattern cannot guarantee immutability entirely, as the struct fields may be used from within the same package. 
+Unfortunately, this pattern cannot guarantee immutability entirely, as the struct fields may be used from within the same package. 
 So, the package developer has to make sure not to mutate the object as Go does not allow any further restrictions. 
 The last option Go offers is to create manual copies of the objects. 
-Unfortunately this obfuscates the code for the sake of immutability and adds runtime overhead. 
+Unfortunately, this obfuscates the code for the sake of immutability and adds runtime overhead. 
 To sum up, Go was not designed with immutability as paramount and exactly feels that way. +
 It does not help the developer to make any assumptions nor guarantees. 
 Based on that, almost no library was written with immutability as a major concern. 
@@ -326,29 +326,29 @@ A function is called pure if the two rules apply:
 1. The function depends on its arguments only and is idempotent. This also excludes mutable references and things such as I/O streams. 
 2. The function has no side effects, which means the evaluation does not involve any mutation. Note, this also applies to effects appearing to the outer world like I/O.  
 
-If both rules apply, the function is a computational analogue of a mathematical function. 
-A few programming languages have been designed around the principle of purity, such as haskell. 
-In pure languages the entire program fulfills the principles of purity. 
+If both rules apply, the function is a computational analog of a mathematical function. 
+A few programming languages have been designed around the principle of purity, such as Haskell. 
+In pure languages, the entire program fulfills the principles of purity. 
 As I/O is inherently impure, a pure programming idiom, the I/O Monad, was found for pure functional programming. 
-However neither Go nor Elixir are designed to be pure languages. 
+However, neither Go nor Elixir are designed to be pure languages. 
 For Golang this can be determined easily when remembering the Immutability chapter. 
-Go does not offer any Immutablity guarantees and leaves this decision to the programmer. 
-Apparantly this already violates purity because rule #2 no longer holds true. 
+Go does not offer any Immutability guarantees and leaves this decision to the programmer. 
+Apparently this already violates purity because rule #2 no longer holds true. 
 It is impossible to be pure without guaranteeing immutability. 
-Theoretically it is still possible to write a pure program, but for sufficient complex programs it is barely provable. 
+Note that, theoretically, it is still possible to write a pure program, but it is barely provable for sufficient complex programs. 
 Elixir is different, as it guarantees immutability.  
-Nevertheless it is impure, which can be observed easiliy when looking at how I/O is performed. 
+Nevertheless, it is impure, which can be observed easily when looking at how I/O is performed. 
 Since it is implemented without the monad, performing I/O operations is impure.   
 To sum up, of course, it is possible to write pure functions in both languages, but there is no guarantee other programmers do so as well. 
-Futhermore both languages' compilers do not make use of the advantages purity can offer. 
-As a consequence, pure functions are only profitable for the programmer as one can easier reason about them. 
+Furthermore both languages' compilers do not make use of the advantages purity can offer. 
+As a consequence, pure functions are only profitable for the programmer they are easier reason about. 
 Therefore I suggest writing pure functions wherever it is reasonable without obfuscating code, else sticking to the impure constructs the language was designed for. 
 
 == Functional Programmer's Toolbox
 
 Through the years a set standard set of features for functional programming has been established. 
 Though a multiparadigm language,  Go chose not to support any of those. 
-Elixir in contrast has them all baked in. 
+Elixir in contrast, has them all baked in. 
 So let us see, what in my opinion is a Toolbox making life in functional programming much easier. 
 
 Pattern matching allows to define a function to behave differently depending on matched pattern. 
@@ -367,9 +367,9 @@ end
 <2> Matches a list with more than 0 elements, destructuring the list into a head and tail. The head is first item of the list, which is not bound to a label in the example. The tail contains the rest of the list, which passed as an argument to the recursive call. 
 
 The use of pattern matching helped avoiding a bunch of if-else statements making the code easily understandable and readable without clutter. 
-The example already makes use of a advanced feature of pattern matching in Elixir. 
-Elixir allows to match against all of its internal types plus user defined types. 
-Additionally it is possible to destructure the data, as in the example when we splitted the list in its head and tail. 
+The example already makes use of an advanced feature of pattern matching in Elixir. 
+Elixir allows matching against all of its internal types plus user-defined types. 
+Additionally, it is possible to destructure the data, as in the example when we split the list in its head and tail. 
 Pattern matching is not only available in function signatures but also in other expressions. 
 For instances inside the case statement:
 [source, elixir]
@@ -395,7 +395,7 @@ def empty_map?(map) when is_map(map), do: false
 ----
 
 Looking at the function empty_map? one might ask why guards are necessary since one can pattern match on maps, right? 
-In fact matching on maps is possible, but it is not possible to match an empty map. 
+In fact, matching on maps is possible, but it is not possible to match an empty map. 
 Hence guards are necessary here. 
 Furthermore the guard *is_map(map)* demonstrates the fact, that a guard can restrict the matched types. 
 
@@ -420,13 +420,13 @@ Nonetheless they are useful.
 == Standard Library & Collections
 
 When considering a language for development the standard library and the language's ecosystem is a key aspect. 
-In this chapter we will inspect from a functional perspective how many utilities the standard library of both languages provides. 
+In this chapter, we will inspect from a functional perspective how many utilities the standard library of both languages provides. 
 Starting with Go, it has to be said, that the standard library is far from being as complete as Java's. 
 It is kept very minimalistic offering barely more than a solid foundation to build upon. 
-Due to the lack of parametric polymorphism the standard library does not provide a broad range of container types. 
+Due to the lack of parametric polymorphism, the standard library does not provide a broad range of container types. 
 As a consequence Go does not provide the utilities for collection types a functional programmer is used to. 
-The standard way of handling the absence, is to write the needed helper functions yourself. 
-Unfortunately this has to be done for every type the operations should be applied on (assuming we want to avoid interface{} and casting for reasons discussed in chapter Type Systems).
+The standard way of handling the absence is to write the needed helper functions yourself. 
+Unfortunately, this has to be done for every type the operations should be applied on (assuming we want to avoid interface{} and casting for reasons discussed in chapter Type Systems).
 This is pretty repetitive, leading to much boilerplate and code blocks where only types differ. 
 As a consequence this kind of programming style, though very functional, is far from optimal in Go. 
 Rob Pike, one of the language designers said about a map/reduce/filter package he wrote: 
@@ -459,13 +459,13 @@ For a functional programmer the most standard tools are missing, which makes Go 
 Obviously different implementations of programming languages behave differently regarding performance. 
 The same often holds true when implementing a feature in different paradigms within one language. 
 Functional programming usually avoids mutation of state and thus encourages the use of recursion. 
-However this can result in a serious performance difference compared to imperative programming, depending on how the compiler/runtime optimizes the code. 
+However, this can result in a serious performance difference compared to imperative programming, depending on how the compiler/runtime optimizes the code. 
 Thus this chapter will not compare Elixir and Go with each other but rather how the use of recursion vs imperative features affects a program's runtime. 
 
 Elixir does not allow to mutate state and as such can not support any iterative control flow structures such as the *for* loop. 
 Thus a programmer has to rely on recursion to get the job done. 
 This means, a function is called recursively until a condition is reached, that stops the continuation.
-A classic example is a function, that computes the nth-fibonacci number. 
+A classic example is a function, that computes the nth-Fibonacci number. 
 Where a Fibonacci Number is defined as:  
 
 stem:[f_n = f_(n-1) + f_(n-2) forall n>2]
@@ -484,18 +484,18 @@ def fibonacci(1), do: 1
 def fibonacci(n), do: fibonacci(n-1) + fibonacci(n-2)
 ----
 
-The given implementation uses recursion for computing the fibonacci number, whereas computing one fibonacci number will always yield two function calls.
-Since a fibonacci number depends on its two predecessors, a cascade of function calls is necessary for computing a fibonacci number with a bigger n. 
+The given implementation uses recursion for computing the Fibonacci number, whereas computing one Fibonacci number will always yield two function calls.
+Since a Fibonacci number depends on its two predecessors, a cascade of function calls is necessary for computing a fibonacci number with a bigger n. 
 Running this function naively without any optimizations applied is surely not optimal. 
-Each function call results in a new stack frame, which is alot of overhead for actually just passing around the called function's return value. 
-A common applied optimization for functional languages is the so called tail call optimization. 
+Each function call results in a new stack frame, which is a lot of overhead for actually just passing around the called function's return value. 
+A commonly applied optimization for functional languages is the so-called tail call optimization. 
 This optimization can be applied when the last executed statement of a function is a function call. 
-A recursive function that fits the mentioned requirements is called tail recursive. 
-When the optimization is applied, the creation of new stack frames is avoided and the computation can run with constant stack space. 
+A recursive function that ends in a call to itself is called tail recursive. 
+When the optimization is applied, the creation of new stack frames is avoided and the computation runs with constant stack space. 
 Ultimately this results in a huge performance benefit. 
 Elixir does provide this type of optimization, so let us use it. 
-When looking at our naive fibonacci implementation, the last executed statement is actually an addition. 
-So we need to change the algorithm for computing the fibonacci number.  
+When looking at our naive Fibonacci implementation, the last executed statement is actually an addition. 
+So we need to change the algorithm for computing the Fibonacci number.  
 
 [source, elixir]
 ----
@@ -508,7 +508,7 @@ defp pfib(n, next, result), do: pfib(n-1, next+result, next) #Hooray! This is ta
 When measuring execution times a huge difference between the two versions can be observed. 
 I will just measure very roughly, as my goal is not to show absolute numbers, but the relative difference. 
 The used method does not respect the times our program spent in kernel or user mode. 
-But i suppose, when executing it a number of times it still has its relevance (in the end you might just want to test it yourself!). 
+But I suppose, when executing it a number of times it still has its relevance (in the end you might just want to test it yourself!). 
 I used the following: 
 
 [source, elixir]
@@ -534,34 +534,33 @@ The optimized version:
 ----
 
 As we can see, the difference is enormous. 
-Apparently, it is so significant, the optimized version could easily compute the 300000th fibonacci number on my machine within a second! 
 To sum up, even though elixir as a functional language relies on recursion only, it can be incredibly fast and efficient, when used correctly. 
 
 Let us now have a look at how Golang handles things. 
 Go, unlike Elixir, supports both iterative structures and recursion. 
-Though, as of now Golang does not support tail call optimization. 
+Though, as of now, Golang does not support tail call optimization. 
 Simply put, for computationally intensive tasks recursion should be avoided. 
-Thus an efficient function that computes fibonacci numbers in Go must be iterative. 
-The performance difference between the recursive and iterative approach is comparable to the optimized and unoptimized versions used with elixir. 
+Thus an efficient function must be iterative in Go. 
+The performance difference between the recursive and iterative approach is comparable to the optimized and unoptimized versions used with Elixir. 
 Based on this observation it can be concluded, that it is not reasonable to use the purely recursive approach, often seen in functional programming, in Go. 
 
 == Conclusion
 
 As highlighted in the different chapters of this paper, functional programming for humans involves much more than functions only. 
-Go calls itself a multiparadigm language, which is undoutedly true. 
-However among all examined aspects Go was never doing well. 
-In my humble opinion the type system at this point in time is at best unsuitable for functional programming. 
+Go calls itself a multiparadigm language, which is undoubtedly true. 
+However, among all examined aspects, Go was never doing well. 
+In my humble opinion, the type system at this point in time is at best unsuitable for functional programming. 
 In addition to the missing functional standard library components, the performance penalty when using recursion and missing language constructs lead to my conclusion, that Go is not a functional language and should not be used as such. 
 This does not mean including some functional principles cannot lead to improvements, so I suggest still considering them. 
-Since this paper can never cover everything, you might want to dig a little into reflection in Go. 
-Some people used it to implement some functional features. 
+Since this paper can not cover everything, you might want to dig a little into reflection in Go. 
+Some people used it to implement some functional features, which are more useable than those examined in this paper. 
 Obviously using reflection has its own downsides, but decide for yourself. 
 In contrast to Go, Elixir was doing pretty well in all categories. 
 One of the negatives for me personally is the dynamic type system, as I prefer programming in statically typed languages. 
 Aside from that Elixir gives the impression to provide a solid foundation for functional programming. 
 Similarly to Go, this paper is far from covering all aspects for Elixir. 
 Elixir provides a few more helpful features you might want to discover. 
-In the end functional programming itself is a much broader topic and depending on how it is used, way more complicated. 
+In the end, functional programming itself is a much broader topic and depending on how it is used, way more complicated. 
 Feel free to dive into the realms of crazy abstractions and scary maths to find what else there is to see. 
 
 
