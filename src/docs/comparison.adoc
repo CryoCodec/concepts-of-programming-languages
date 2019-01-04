@@ -39,7 +39,7 @@ However, the essence of these languages is way simpler.
 Apparently, almost all functional languages share a common ancestor, the lambda calculus. 
 Introduced as a computational model by the mathematician Alonzo Church in the 1930s, it does not dictate any of the modern languages' features a necessity. 
 In fact, its ruleset could barely be simpler. 
-The Lambda Calculus allows to define functions, apply them and then compute them (obivously the idea is a little more complex than that, but no deeper knowledge is needed for understanding this paper, thus the simplification). Let us have a look at how the languages handle these scenarios:
+The Lambda Calculus allows to define functions, apply them and then compute them (obivously the idea is a little more complex than that, but no deeper knowledge is needed for understanding this paper, thus the simplification) <<LC>>. Let us have a look at how the languages handle these scenarios:
 
 .main.go
 [source, go]
@@ -232,7 +232,7 @@ Instead, most languages allow references to change.
 More important is whether the immutability guarantees for an object are *deep* or *shallow*. 
 For *deep* immutability all object's fields must be non-reassignable and transitively-referred to objects have to be immutable as well. 
 In contrast, *shallow* immutability forbids the reassignment of an object's fields but allows for transitively referred to objects to be mutated. 
-From a clients perspective the deep immutablity guarantees are preferable. 
+From a clients perspective the deep immutablity guarantees are preferable. <<IM>>
 
 In Elixir all data guarantees deep immutability. 
 In general, this means whenever a structure shall be modified, a new object with the modified values is the result. 
@@ -508,12 +508,12 @@ defp pfib(n, next, result), do: pfib(n-1, next+result, next) #Hooray! This is ta
 When measuring execution times a huge difference between the two versions can be observed. 
 I will just measure very roughly, as my goal is not to show absolute numbers, but the relative difference. 
 The used method does not respect the times our program spent in kernel or user mode. 
-But I suppose, when executing it a number of times it still has its relevance (in the end you might just want to test it yourself!). 
+But I suppose, when executing it a number of times it still has its relevance (in the end, you might just want to test it yourself!). 
 I used the following: 
 
 [source, elixir]
 ----
-def timeIt(n) do
+def timeFib(n) do
     start = :os.system_time(:seconds)
     fibonacciNumber = fibonacci(n)
     finish = :os.system_time(:seconds)
@@ -559,11 +559,28 @@ In contrast to Go, Elixir was doing pretty well in all categories.
 One of the negatives for me personally is the dynamic type system, as I prefer programming in statically typed languages. 
 Aside from that Elixir gives the impression to provide a solid foundation for functional programming. 
 Similarly to Go, this paper is far from covering all aspects for Elixir. 
-Elixir provides a few more helpful features you might want to discover. 
+It provides a few more helpful features you might want to discover. 
 In the end, functional programming itself is a much broader topic and depending on how it is used, way more complicated. 
 Feel free to dive into the realms of crazy abstractions and scary maths to find what else there is to see. 
 
-
+[bibliography]
 == Sources & Further Readings
 
-Immutability: https://homes.cs.washington.edu/~mernst/pubs/immutability-aliasing-2013-lncs7850.pdf
+- [[[LC, 1]]] Raúl Rojas, A Tutorial Introduction to the Lambda Calculus: + 
+https://www.inf.fu-berlin.de/lehre/WS03/alpi/lambda.pdf
+- [[[IM, 2]]] Alex Potanin, Johan ̈Ostlund, Yoav Zibin, and Michael D. Ernst, Immutability: + 
+https://homes.cs.washington.edu/~mernst/pubs/immutability-aliasing-2013-lncs7850.pdf
+
+Some helpful resources, that helped me getting started with Elixir: +
+For getting started: https://elixir-lang.org/getting-started/introduction.html  +
+Dense information: https://elixirschool.com/en/ +
+Talk about Elixir's Type System: https://www.youtube.com/watch?v=JT0ECYZ9FaQ&t=1168s +
+
+Some resources to get you started with Go: +
+For getting started: https://tour.golang.org/welcome/1 +
+Different perspective on Go and Functional Programming: https://www.youtube.com/watch?v=c8Fwb4KbVJM
+
+Functional Programming in General: +
+History of Functional Programming: http://www.cse.psu.edu/~gxt29//historyOfFP/historyOfFP.html +
+Category Theory for Programmers (scary maths!): https://www.youtube.com/watch?v=I8LbkfSSR58&list=PLbgaMIhjbmEnaH_LTkxLI7FMa2HsnawM_&index=1 +
+Haskell, for looking at a pure functional language: https://www.haskell.org/
