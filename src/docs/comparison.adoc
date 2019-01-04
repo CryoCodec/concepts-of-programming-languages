@@ -45,15 +45,15 @@ The Lambda Calculus allows to define functions, apply them and then compute them
 [source, go]
 ----
 
-func world() string { // <1>
-	return "World!"
+func add(x, y int) int { // <1>
+	return x + y
 }
 
-func hello(x func() string) { <2>
-	fmt.Printf("Hello %v", x())
+func eval(fun func(int, int) int, x, y int) int { // <2>
+	return fun(x, y)
 }
 
-hello(world) // <3>
+eval(add, 5, 10) // --> 15 // <3>
 
 ----
 
@@ -65,18 +65,18 @@ hello(world) // <3>
 [source, elixir]
 ----
 
-defmodule Greeter do
-  def world(), do: "World!" //<1>
-  def hello(x), do: IO.puts "Hello " <> x.() //<2>
+defmodule Calc do
+  def add(x, y), do: x + y  //<1>
+  def eval(fun, x, y), do: fun.(x, y) //<2>
 end
 
-IO.puts Greeter.hello(&Greeter.world/0) //<3>
+Calc.eval(&Calc.add/2, 5, 10) //<3>
 
 ----
 
-<1> Defines a function in Elixir
-<2> Defines a function, which takes a function as parameter. 
-<3> Applies a function and computes the result. The *&* is used to pass a function defined in a module as a parameter whereas the */* denotes its arity. In this case the function *world* is of arity 0 as it does not take any parameters.
+<1> Defines a named function in Elixir
+<2> Defines a named function, which takes a function as parameter. 
+<3> Applies a function and computes the result. The *&* is used to pass a function defined in a module as a parameter whereas the */* denotes its arity. In this case the function *add* is of arity 2 as it does take two parameters.
 
 Both languages provide toolkits allowing the same things as the lambda calculus, which makes them equally powerful. 
 Apparently, the Lambda Calculus is equivalent in computational power to the Turing machine.  
@@ -107,8 +107,8 @@ func id(x interface{}) interface{} { //<1>
 	return x
 }
 
-fmt.Print(  id(10).(int)  ) //<2>
-fmt.Print(  id(true).(int)  ) //<3>
+id(10).(int) //<2>
+id(true).(int) //<3>
 ----
 <1> Go lacks support for parametric polymorphism. To be generic, one has to use the empty interface{}, which may contain anything.
 <2> Calls *id* with an integer. Returns the interface{} and has to be casted to an integer. 
@@ -132,12 +132,12 @@ func compose(g, f function) function {
 		return g(f(x))
 	}
 }
-
-func pow2(x any) any { //needs this type declaration, otherwise, it cannot be passed to compose
+//needs this type declaration, otherwise, it cannot be passed to compose
+func pow2(x any) any { 
 	return x.(int) * x.(int)
 }
-
-func sqrt(x any) any { //needs this type declaration, otherwise, it cannot be passed to compose
+ //needs this type declaration, otherwise, it cannot be passed to compose
+func sqrt(x any) any {
 	return math.Sqrt(float64(x.(int)))
 }
 
@@ -181,9 +181,12 @@ So far so good. Let's head to our Id function.
 
 [source, elixir]
 ----
-id = fn a -> a end
-id.("some") #--> "some"
+id = fn a -> a end //<1>
+id.("some") #--> "some" //<2>
 ----
+
+<1> Defines an anonymous function in Elixir and binds it to a name. 
+<2> Calls the the *id* function. The *.* is necessary, as Elixir differs between named and anonymous functions. 
 
 Writing this function is a breeze in Elixir compared to Go. 
 It supports all types and works without casting. 
@@ -252,7 +255,8 @@ a = "later" #rebinding a
 # a is "later", x is "now"
 
 shadow = fn b -> 
-              a = "see you " #Here the outer a gets shadowed by the inner a. Outer a is inaccessible
+#Here the outer a gets shadowed by the inner a. Outer a is inaccessible
+              a = "see you " 
               a <> b
           end 
 shadow.(a) # --> "see you later"
@@ -286,8 +290,9 @@ Using this technique allows to design immutable data types, as the following exa
 package rational 
 
 //represents a rational number with numerator/denominator
+//fields start with a lowercase letter, thus cannot be accessed from outside this package
 type Rational struct {
-	numerator   int  //starts with a lowercase letter, thus cannot be accessed from outside this package
+	numerator   int  
 	denominator int
 }
 
@@ -296,13 +301,10 @@ func NewRational(numerator int, denominator int) Rational {
 }
 
 //Call by value, cannot mutate object
-func (x Rational) Multiply(y Rational) Rational {
-	return NewRational(x.numerator*y.numerator, x.denominator*y.denominator) //Returns a NEW Rational object
+//returns a NEW Rational object
+func (x Rational) Multiply(y Rational) Rational { 
+	return NewRational(x.numerator*y.numerator, x.denominator*y.denominator) 
 }  
-
-func (x Rational) GetNumerator() int {
-  return x.numerator
-}
 ----
 
 The above pattern shows how to implement immutable data structures in Go. 
@@ -375,7 +377,7 @@ For instances inside the case statement:
 [source, elixir]
 ----
 case {1, 2, 3} do
-   {4, 5, 6} ->
+  {4, 5, 6} ->
      "This clause won't match"
   {1, x, 3} ->
     "This clause will match and bind x to 2 in this clause"
@@ -500,8 +502,10 @@ So we need to change the algorithm for computing the Fibonacci number.
 [source, elixir]
 ----
 def fibonacci(n) when n < 0, do: raise "Bad Boy! Fibonacci is defined only for n >= 0"
-def fibonacci(n), do: pfib(n, 1, 0)  #allows for a simple interface with arity 1, but dispatches the tailrecursion to a private implementation
-defp pfib(0, _, result), do: result  #defp defines a private (not visible for the outside world) function
+#allows for a simple interface with arity 1, but dispatches the tailrecursion to a private implementation
+def fibonacci(n), do: pfib(n, 1, 0)  
+#defp defines a private (not visible for the outside world) function
+defp pfib(0, _, result), do: result  
 defp pfib(n, next, result), do: pfib(n-1, next+result, next) #Hooray! This is tail recursive!
 ----
 
